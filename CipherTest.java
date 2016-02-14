@@ -7,22 +7,11 @@ public class CipherTest
       Cipher encryptKey = new Cipher("2753", "3233");
       Cipher decryptKey = new Cipher();
       
-      String inString = "Eli Fonseca";
-      BigInteger[] cipherString = new BigInteger[inString.length()];
+      String messageString = "Fonseca & Ding Inc.";
+      String[] cipherString = encryptKey.encryptString(messageString);
+      String decryptString = decryptKey.decryptString(cipherString);
       
-      for (int ii = 0; ii < inString.length(); ii++)
-      {
-         cipherString[ii] = encryptKey.encryptChar(inString.charAt(ii));
-      }
-      
-      String decryptString = "";
-      
-      for (int ii = 0; ii < cipherString.length; ii++)
-      {
-         decryptString += decryptKey.decryptChar(cipherString[ii]);
-      }
-      
-      System.out.println(inString);
+      System.out.println(messageString);
       System.out.println(decryptString);
       
       /*
