@@ -1,15 +1,17 @@
 import java.math.*;
+import java.util.*;
 
 public class CipherTest
 {
    public static void main(String[] arg)
    {
-      Cipher encryptKey = new Cipher("2753", "3233");
-      Cipher decryptKey = new Cipher();
-      
+   Cipher decryptKey = new Cipher();
+
+      Cipher encryptKey = new Cipher(decryptKey.getPublicExponent(), decryptKey.getModulus());
+            
       String messageString = "Fonseca & Ding Inc.";
-      String[] cipherString = encryptKey.encryptString(messageString);
-      String decryptString = decryptKey.decryptString(cipherString);
+      ArrayList<String> cipherString = encryptKey.encryptString(messageString);
+      String decryptString = decryptKey.decrypt(cipherString);
       
       System.out.println(messageString);
       System.out.println(decryptString);
