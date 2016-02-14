@@ -45,7 +45,7 @@ public class Server extends JFrame {
       sendMessage(outKey2, false);
    }
    
-   //proccess the keys sent from the other user
+   //proccess the keys sent from the other user, keys are send as first ommuniation after the connection made
    private void getPublicKeys() throws IOException {
 		for(int ii = 0;  ii < 2;  ii++) { //two keys should be sent
 			try {
@@ -71,7 +71,7 @@ public class Server extends JFrame {
    public Server(int height, int length, int port, String userName, int bitLength) {
       super("Instant Messenger-Server");
       this.userName = userName;
-      this.bitLength = bitNumber;
+      this.bitNumber = bitLength;
       sendEncrypted = true;
       receiveEncrypted = true;
       this.height = height;
@@ -154,7 +154,7 @@ public class Server extends JFrame {
                {
                   sendMessage("SET_ENCRYPTION", false);
                }
-               sendEncrypted = !sendEncrypted;   // changes the encryption setting
+               //sendEncrypted = !sendEncrypted;   // changes the encryption setting
 
             }
          }
@@ -223,15 +223,16 @@ public class Server extends JFrame {
 
 	//during the chat conversation 
    private void whileChatting() throws IOException {
-      String notification = "You are now connected! ";
-      sendMessage(notification);
+      //String notification = "You are now connected! ";
+      //sendMessage(notification);
       String decryptedMessage = "";
       String plainMessage = "";
       ableToType(true);
-      do
+      while (!decryptedMessage.equals(otherName + "END") && !plainMessage.equals(otherName + "END"))
       {
-         if (receiveEncrypted)
-            do {
+         if (receiveEncrypted) 
+            do 
+            {
             	//have conversation
    
                try {
@@ -241,14 +242,18 @@ public class Server extends JFrame {
                   {
                      receiveEncrypted = !receiveEncrypted;
                   }
-   
+                  /*
+                  System.out.println(decryptedMessage.equals(otherName + "END"));
+                  System.out.println(decryptedMessage);
+                  System.out.println(otherName + "END");
+                  */
       				showMessage("\n" + decryptedMessage);
                }
                catch(ClassNotFoundException e) {
                   showMessage("\n idk wtf that user sent!");
                }
             }
-            while(!decryptedMessage.equals(otherName+" - END") && !decryptedMessage.equals(otherName+" - SET_ENCRYPTION")); //if the client wants end then use this string 
+            while(!decryptedMessage.equals(otherName+"END") && !decryptedMessage.equals(otherName+" - SET_ENCRYPTION")); //if the client wants end then use this string 
          else
          {
             do
@@ -260,16 +265,17 @@ public class Server extends JFrame {
                   {
                      receiveEncrypted = !receiveEncrypted;
                   }
+                  
                   showMessage("\n" + plainMessage);
          		}
          		catch(ClassNotFoundException e) {
          			showMessage("\nI don't know that object type!");
          		}
             }
-            while (!plainMessage.equals(otherName+" - END") && !plainMessage.equals(otherName+" - SET_ENCRYPTION"));
+            while (!plainMessage.equals(otherName+"END") && !plainMessage.equals(otherName+" - SET_ENCRYPTION"));
          }
       }
-      while (!plainMessage.equals(otherName+" - END") && !decryptedMessage.equals(otherName+" - END"));
+      
    }
 
 	//close streams and sockets after you are done chating 
@@ -312,7 +318,8 @@ public class Server extends JFrame {
       if (message.equals("SET_ENCRYPTED"))
       {
          sendEncrypted = !sendEncrypted;
-      }      ArrayList<String> encryptedMessage = encrypter.encryptString("SERVER - ");
+      }      
+      ArrayList<String> encryptedMessage = encrypter.encryptString(userName + " - ");
       encryptedMessage.addAll(encrypter.encryptString(message));
       //System.out.println(encryptedMessage);
 		try {
