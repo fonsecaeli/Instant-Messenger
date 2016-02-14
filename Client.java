@@ -17,13 +17,16 @@ public class Client extends JFrame {
 	private String message = "";
 	private String serverIP;
 	private Socket connection;
-	private final int HEIGHT = 1000;
-	private final int LENGTH = 1000;
-	private int port = 6789;
+	private int HEIGHT;
+	private int LENGTH;
+	private int port;
 
 	//constructor 
-	public Client(String host) {
-		super("Instant Messenger");
+	public Client(String host, int height, int length, int port) {
+		super("Instant Messenger-Client");
+      HEIGHT = height;
+      LENGTH = length;
+      this.port = port;
 		serverIP = host;
 		userText = new JTextField();
 		userText.setEditable(false);
