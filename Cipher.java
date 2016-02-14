@@ -21,31 +21,56 @@ public class Cipher
       modulus = new BigInteger(modulus1);
    }
    
-   public BigInteger getPublicExponent()
+   public String getPublicExponent()
    {
-      return publicExponent;
+      return publicExponent.toString();
    }
    
-   public BigInteger getModulus()
+   public String getModulus()
    {
-      return modulus;
+      return modulus.toString();
    }
    
    // Uses public keys (e and n) to encrypt a char: c = m^e mod n
-   public BigInteger encryptChar(char inMessage)
+   public String encryptChar(char messageChar)
    {
-      String mString = (int) inMessage + "";
+      String mString = (int) messageChar + "";
       BigInteger m = new BigInteger(mString);
-      BigInteger encrypted = m.modPow(publicExponent, modulus);
-      return encrypted;
+      BigInteger encryptChar = m.modPow(publicExponent, modulus);
+      return encryptChar.toString();
    }
    
    // Uses private and public keys (d and n) to decrypt a BigInteger: m = c^d mod n
-   public char decryptChar(BigInteger cipherMessage)
+   public char decryptChar(String encryptChar)
    {
-      BigInteger m = cipherMessage.modPow(privateExponent, modulus);
+      BigInteger c = new BigInteger(encryptChar);
+      BigInteger m = c.modPow(privateExponent, modulus);
       char decrypted = (char) m.intValue();
       return decrypted;
+   }
+
+   public String[] encryptString(String messageString)
+   {
+      String[] cipherString = new String[messageString.length()];
+      
+      for (int ii = 0; ii < messageString.length(); ii++)
+      {
+         cipherString[ii] = encryptChar(messageString.charAt(ii));
+      }
+      
+      return cipherString;
+   }
+   
+   public String decryptString(String[] cipherString)
+   {
+      String decryptString = "";
+      
+      for (int ii = 0; ii < cipherString.length; ii++)
+      {
+         decryptString += decryptChar(cipherString[ii]);
+      }
+      
+      return decryptString;
    }
    
 }
