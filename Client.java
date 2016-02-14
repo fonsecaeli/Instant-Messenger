@@ -155,7 +155,7 @@ public class Client extends JFrame {
                {
                   sendMessage("SET_ENCRYPTION", false);
                }
-               sendEncrypted = !sendEncrypted;   // changes the encryption setting
+               //sendEncrypted = !sendEncrypted;   // changes the encryption setting
             }
          }
       
@@ -221,16 +221,18 @@ public class Client extends JFrame {
 		ableToType(true);
       String decryptedMessage = "";
       String plainMessage = "";
-      do
+      while (!decryptedMessage.equals(otherName + "END") && !plainMessage.equals(otherName + "END"))
       {
-         System.out.println(receiveEncrypted);
-         if (receiveEncrypted == true)
+         //System.out.println(receiveEncrypted);
+         if (receiveEncrypted)
          {
             do {
             	//have conversation
    
                try {
                   ArrayList<String> message = (ArrayList<String>) input.readObject();
+                  //System.out.println(message);
+                  //System.out.println(receiveEncrypted);
                   decryptedMessage = decrypter.decrypt(message);
                   if (decryptedMessage.equals(otherName + " - SET_ENCRYPTION"))
                   {
@@ -246,7 +248,7 @@ public class Client extends JFrame {
                   showMessage("\n idk wtf that user sent!");
                }
             }
-            while(!decryptedMessage.equals(otherName + " - END") && !decryptedMessage.equals(otherName + " - SET_ENCRYPTION")); //if the client wants end then use this string 
+            while(!decryptedMessage.equals(otherName + "END") && !decryptedMessage.equals(otherName + " - SET_ENCRYPTION")); //if the client wants end then use this string 
          }
          else
          {
@@ -267,12 +269,11 @@ public class Client extends JFrame {
          			showMessage("\n I don't know that object type!");
          		}
             }
-            while (!plainMessage.equals(otherName + " - END") && !plainMessage.equals(otherName + " - SET_ENCRYPTION"));
+            while (!plainMessage.equals(otherName + "END") && !plainMessage.equals(otherName + " - SET_ENCRYPTION"));
          }
       }
-      while (!plainMessage.equals(otherName + " - END") && !decryptedMessage.equals(otherName + " - END"));
-   }
-	//house keeping, closing all the streams and sockets down
+      }
+      	//house keeping, closing all the streams and sockets down
 	private void closeStuff() {
 		showMessage("\nClosing stuff down");
 		ableToType(false);
@@ -303,7 +304,7 @@ public class Client extends JFrame {
          }
 		}
 		catch(IOException e) {
-			chatWindow.append("\n something messed up sending message");
+			chatWindow.append("\nsomething messed up sending message");
 		}
 	}
    
