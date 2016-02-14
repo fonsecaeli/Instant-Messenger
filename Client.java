@@ -34,10 +34,13 @@ public class Client extends JFrame {
    private String inKey1;
    private String inKey2;
 
+   private String userName;
+   private String otherName;
+   private int bitLength;
    
    //sets up the public key encryption
    private void setupEncryption() {
-      decrypter = new Cipher(512);
+      decrypter = new Cipher(bitLength);
       outKey1 = decrypter.getPublicExponent();
       outKey2 = decrypter.getModulus();
       
@@ -56,7 +59,7 @@ public class Client extends JFrame {
             else {
                inKey2 = message.get(1);
             }
-            
+            otherName = message.get(0);
 			}
 			catch(ClassNotFoundException e) {
 				showMessage("\n I don't know that object type!");
@@ -66,13 +69,15 @@ public class Client extends JFrame {
 	}
 
 	//constructor 
-	public Client(String host, int height, int length, int port) {
+	public Client(String host, int height, int length, int port, String userName, int bitLength) {
 		super("Instant Messenger-Client");
       sendEncrypted = true;
       receiveEncrypted = true;
       this.height = height;
       this.length = length;
       this.port = port;
+      this.bitLength = bitLength;
+      this.userName = userName;
       setupMenus();
 		serverIP = host;
 		userText = new JTextField();
@@ -227,7 +232,7 @@ public class Client extends JFrame {
                try {
                   ArrayList<String> message = (ArrayList<String>) input.readObject();
                   decryptedMessage = decrypter.decrypt(message);
-                  if (decryptedMessage.equals("SERVER - SET_ENCRYPTION"))
+                  if (decryptedMessage.equals(otherName + " - SET_ENCRYPTION"))
                   {
                      receiveEncrypted = !receiveEncrypted;
                   
@@ -241,7 +246,7 @@ public class Client extends JFrame {
                   showMessage("\n idk wtf that user sent!");
                }
             }
-            while(!decryptedMessage.equals("SERVER - END") && !decryptedMessage.equals("SERVER - SET_ENCRYPTION")); //if the client wants end then use this string 
+            while(!decryptedMessage.equals(otherName + " - END") && !decryptedMessage.equals(otherName + " - SET_ENCRYPTION")); //if the client wants end then use this string 
          }
          else
          {
@@ -250,7 +255,7 @@ public class Client extends JFrame {
          	   try {
          			ArrayList<String> message = (ArrayList<String>) input.readObject(); // is ArrayList the message type?
          		   plainMessage = message.get(0) + message.get(1);
-                  if (plainMessage.equals("SERVER - SET_ENCRYPTION"))
+                  if (plainMessage.equals(otherName + " - SET_ENCRYPTION"))
                   {
                      receiveEncrypted = !receiveEncrypted;
                   }
@@ -262,10 +267,10 @@ public class Client extends JFrame {
          			showMessage("\n I don't know that object type!");
          		}
             }
-            while (!plainMessage.equals("SERVER - END") && !plainMessage.equals("SERVER - SET_ENCRYPTION"));
+            while (!plainMessage.equals(otherName + " - END") && !plainMessage.equals(otherName + " - SET_ENCRYPTION"));
          }
       }
-      while (!plainMessage.equals("SERVER - END") && !decryptedMessage.equals("SERVER - END"));
+      while (!plainMessage.equals(otherName + " - END") && !decryptedMessage.equals(otherName + " - END"));
    }
 	//house keeping, closing all the streams and sockets down
 	private void closeStuff() {
@@ -288,13 +293,13 @@ public class Client extends JFrame {
          sendEncrypted = !sendEncrypted;
       }
       ArrayList<String> message = new ArrayList<String>(2); 
-      message.add("CLIENT - ");
+      message.add(userName + " - ");
       message.add(m);
 		try {
 			output.writeObject(message); //sends the message to the server
 			output.flush();
          if(visible) {
-			   showMessage("\nCLIENT - " + m); //shows message in the users chat window
+			   showMessage("\n" + userName + " - " + m); //shows message in the users chat window
          }
 		}
 		catch(IOException e) {
@@ -308,13 +313,13 @@ public class Client extends JFrame {
       {
          sendEncrypted = !sendEncrypted;
       }
-      ArrayList<String> encryptedMessage = encrypter.encryptString("CLIENT - ");
+      ArrayList<String> encryptedMessage = encrypter.encryptString(userName + " - ");
       encryptedMessage.addAll(encrypter.encryptString(message));
       System.out.println(encryptedMessage);
 		try {
 			output.writeObject(encryptedMessage); //sends the message to the server
 			output.flush();
-			showMessage("\nCLIENT - " + message); //shows message in the users chat window
+			showMessage("\n" + userName + " - " + message); //shows message in the users chat window
 		}
 		catch(IOException e) {
 			chatWindow.append("\nSomething messed up sending message");
