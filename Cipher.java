@@ -62,7 +62,7 @@ public class Cipher
       return cipherString;
    }
    
-   public String decryptString(ArrayList<String> cipherString)
+   public String decrypt(ArrayList<String> cipherString)
    {
       String decryptString = "";
       
