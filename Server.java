@@ -3,6 +3,8 @@ import java.net.*;
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
+import java.math.BigInteger;
+import java.util.ArrayList;
 
 
 
@@ -15,15 +17,57 @@ public class Server extends JFrame {
    private ObjectInputStream input;
    private ServerSocket server;
    private Socket connection;
-   private int HEIGHT;
-   private int LENGTH;
+   private int height;
+   private int length;
    private int port;
+   
+   //fields for encryption 
+   private boolean isEncrypted;
+   private Cipher encrypter;
+   private Cipher decrypter;
+   private String outKey1;
+   private String outKey2;
+   private String inKey1;
+   private String inKey2;
 
+   
+  //sets up the public key encryption
+   private void setupEncryption() {
+      decrypter = new Cipher();
+      outKey1 = decrypter.getPublicExponent();
+      outKey2 = decrypter.getModulus();
+      
+      sendMessage(outKey1, false);
+      sendMessage(outKey2, false);
+   }
+   
+   //proccess the keys sent from the other user
+   private void getPublicKeys() throws IOException {
+		for(int ii = 0;  ii < 2;  ii++) { //two keys should be sent
+			try {
+				ArrayList<String> message = (ArrayList<String>) input.readObject(); //all messages will be string[]
+            if(ii == 0) {
+               inKey1 = message.get(0);
+            } 
+            else {
+               inKey2 = message.get(0);
+            }
+            
+			}
+			catch(ClassNotFoundException e) {
+				showMessage("\n I don't know that object type!");
+			}
+      }
+      encrypter = new Cipher(inKey1, inKey2);
+		
+	}
+   
 	//constructor
    public Server(int height, int length, int port) {
       super("Instant Messenger-Server");
-      HEIGHT = height;
-      LENGTH = length;
+      isEncrypted = true;
+      this.height = height;
+      this.length = length;
       this.port = port;
       setupMenus();
       userText = new JTextField();
@@ -31,7 +75,10 @@ public class Server extends JFrame {
       userText.addActionListener(
          new ActionListener() {
             public void actionPerformed(ActionEvent event) {
-               sendMessage(event.getActionCommand());
+               String test = event.getActionCommand();
+               if(!test.equals("")) {
+                  sendMessage(test);
+               } 
                userText.setText(""); //turns message box blank after message is sent
             
             }
@@ -40,7 +87,7 @@ public class Server extends JFrame {
       add(userText, BorderLayout.NORTH);
       chatWindow = new JTextArea();
       add(new JScrollPane(chatWindow));
-      setSize(HEIGHT, LENGTH); //size of window
+      setSize(height, length); //size of window
       setVisible(true);
       chatWindow.setFont(new Font("Serif", Font.PLAIN, 30));
       userText.setFont(new Font("Serif", Font.PLAIN, 30));
@@ -51,12 +98,14 @@ public class Server extends JFrame {
       JMenuBar menubar = new JMenuBar();
    	
    
-      JMenu file = new JMenu("File");
+      JMenu options = new JMenu("Options");
    	
    
       JMenuItem exit = new JMenuItem("Exit");
-      file.add(exit);
-      menubar.add(file);
+      JMenuItem encrypt = new JMenuItem("Encyption on/off");
+      options.add(exit);
+      options.add(encrypt);
+      menubar.add(options);
    
       JMenu help = new JMenu("Help");
    	
@@ -78,6 +127,13 @@ public class Server extends JFrame {
                openReadme();
             }
          }
+         );
+      encrypt.addActionListener(
+         new ActionListener() {
+            public void actionPerformed(ActionEvent event) {
+            }
+         }
+      
          );
    
       setJMenuBar(menubar);
@@ -107,6 +163,8 @@ public class Server extends JFrame {
             	//connect and have conversation
                waitForConnection();
                setupStreams();
+               setupEncryption();
+               getPublicKeys();
                whileChatting();
             }
             catch(EOFException ex) {
@@ -135,26 +193,27 @@ public class Server extends JFrame {
       output = new ObjectOutputStream(connection.getOutputStream()); //creates pathway that allows to connect to another computer
       output.flush(); // clears the stream so there is no left over data
       input = new ObjectInputStream(connection.getInputStream()); //sets pathway to receive messages 
-      showMessage("\n Streams are now setup! \n");
+      showMessage("\nStreams are now setup! \n");
    }
 
 	//during the chat conversation 
    private void whileChatting() throws IOException {
-      String message = "You are now connected! ";
-      sendMessage(message);
+      String notification = "You are now connected! ";
+      sendMessage(notification);
+      String decryptedMessage = "";
       ableToType(true);
       do {
       	//have conversation
          try {
-            message = (String) input.readObject();
-         	//stuff here to unencrypted the message that was received
-            showMessage("\n"+message);
+            ArrayList<String> message = (ArrayList<String>) input.readObject();
+            decryptedMessage = decrypter.decrypt(message);
+				showMessage("\n" + decryptedMessage);
          }
          catch(ClassNotFoundException e) {
             showMessage("\n idk wtf that user sent!");
          }
       }
-      while(!message.equals("CLIENT - END")); //if the client wants end then use this string 
+      while(!decryptedMessage.equals("CLIENT - END")); //if the client wants end then use this string 
    }
 
 	//close streams and sockets after you are done chating 
@@ -171,18 +230,36 @@ public class Server extends JFrame {
       }
    }
 
-	//send a message to the client 
+	//send messages to server 
+	private void sendMessage(String m, boolean visible) {
+      ArrayList<String> message = new ArrayList<String>(1);
+      message.add(m); 
+		try {
+			output.writeObject(message); //sends the message to the server
+			output.flush();
+         if(visible) {
+			   showMessage("\nSERVER - " + m); //shows message in the users chat window
+         }
+		}
+		catch(IOException e) {
+			chatWindow.append("\n something messed up sending message");
+		}
+	}
+   
+   //sends messages sends them as ArrayList<string> as param instead of string 
    private void sendMessage(String message) {
-      try {
-      	//stuff here to encrypt the message before it is sent
-         output.writeObject("SERVER - " + message);
-         output.flush();
-         showMessage("\nSERVER - "  + message);
-      }
-      catch(IOException e) {
-         chatWindow.append("\n ERROR: DUDE I CANT SEND THAT MESSAGE");
-      }
-   }
+      ArrayList<String> encryptedMessage = encrypter.encryptString("SERVER - ");
+      encryptedMessage.addAll(encrypter.encryptString(message));
+      //System.out.println(encryptedMessage);
+		try {
+			output.writeObject(encryptedMessage); //sends the message to the server
+			output.flush();
+			showMessage("\nSERVER - " + message); //shows message in the users chat window
+		}
+		catch(IOException e) {
+			chatWindow.append("\n something messed up sending message");
+		}
+	}
 
 	//updates chatWindow
    private void showMessage(final String text) {
