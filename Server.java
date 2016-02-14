@@ -20,6 +20,8 @@ public class Server extends JFrame {
    private int height;
    private int length;
    private int port;
+   private String userName;
+   private String otherName;
    
    //fields for encryption 
    private boolean sendEncrypted;
@@ -30,11 +32,12 @@ public class Server extends JFrame {
    private String outKey2;
    private String inKey1;
    private String inKey2;
+   private int bitNumber;
 
    
   //sets up the public key encryption
    private void setupEncryption() {
-      decrypter = new Cipher(512);
+      decrypter = new Cipher(bitNumber);
       outKey1 = decrypter.getPublicExponent();
       outKey2 = decrypter.getModulus();
       
@@ -53,6 +56,7 @@ public class Server extends JFrame {
             else {
                inKey2 = message.get(1);
             }
+            otherName = message.get(0);
             
 			}
 			catch(ClassNotFoundException e) {
@@ -64,8 +68,10 @@ public class Server extends JFrame {
 	}
    
 	//constructor
-   public Server(int height, int length, int port) {
+   public Server(int height, int length, int port, String userName, int bitLength) {
       super("Instant Messenger-Server");
+      this.userName = userName;
+      this.bitLength = bitNumber;
       sendEncrypted = true;
       receiveEncrypted = true;
       this.height = height;
@@ -187,7 +193,7 @@ public class Server extends JFrame {
                whileChatting();
             }
             catch(EOFException ex) {
-               showMessage("\n Server ended the connection!");
+               showMessage("\nServer ended the connection!");
             }
             finally {
                closeStuff();
@@ -201,9 +207,9 @@ public class Server extends JFrame {
 
 	//wait for connection, then once connected give prompt to user
    private void waitForConnection() throws IOException {
-      showMessage(" Waiting for someone to connect... \n");
+      showMessage("Waiting for someone to connect... \n");
       connection = server.accept(); //once someone asks to connect this accepts the connection to the socket, once connected a connection is created bewteen server and client 
-      showMessage(" Now connected to "+connection.getInetAddress().getHostName());
+      showMessage("Now connected to "+connection.getInetAddress().getHostName());
    
    }
 
@@ -231,7 +237,7 @@ public class Server extends JFrame {
                try {
                   ArrayList<String> message = (ArrayList<String>) input.readObject();
                   decryptedMessage = decrypter.decrypt(message);
-                  if (decryptedMessage.equals("CLIENT - SET_ENCRYPTION"))
+                  if (decryptedMessage.equals(otherName+" - SET_ENCRYPTION"))
                   {
                      receiveEncrypted = !receiveEncrypted;
                   }
@@ -242,7 +248,7 @@ public class Server extends JFrame {
                   showMessage("\n idk wtf that user sent!");
                }
             }
-            while(!decryptedMessage.equals("CLIENT - END") && !decryptedMessage.equals("CLIENT - SET_ENCRYPTION")); //if the client wants end then use this string 
+            while(!decryptedMessage.equals(otherName+" - END") && !decryptedMessage.equals(otherName+" - SET_ENCRYPTION")); //if the client wants end then use this string 
          else
          {
             do
@@ -250,25 +256,25 @@ public class Server extends JFrame {
          	   try {
          			ArrayList<String> message = (ArrayList<String>) input.readObject(); 
          		   plainMessage = message.get(0) + message.get(1);
-                  if (plainMessage.equals("CLIENT - SET_ENCRYPTION"))
+                  if (plainMessage.equals(otherName+" - SET_ENCRYPTION"))
                   {
                      receiveEncrypted = !receiveEncrypted;
                   }
                   showMessage("\n" + plainMessage);
          		}
          		catch(ClassNotFoundException e) {
-         			showMessage("\n I don't know that object type!");
+         			showMessage("\nI don't know that object type!");
          		}
             }
-            while (!plainMessage.equals("CLIENT - END") && !plainMessage.equals("CLIENT - SET_ENCRYPTION"));
+            while (!plainMessage.equals(otherName+" - END") && !plainMessage.equals(otherName+" - SET_ENCRYPTION"));
          }
       }
-      while (!plainMessage.equals("CLIENT - END") && !decryptedMessage.equals("CLIENT - END"));
+      while (!plainMessage.equals(otherName+" - END") && !decryptedMessage.equals(otherName+" - END"));
    }
 
 	//close streams and sockets after you are done chating 
    private void closeStuff() {
-      showMessage("\n Closing connections... \n");
+      showMessage("\nClosing connections... \n");
       ableToType(false);
       try {
          output.close();
@@ -287,17 +293,17 @@ public class Server extends JFrame {
          sendEncrypted = !sendEncrypted;
       }      
       ArrayList<String> message = new ArrayList<String>(2);
-      message.add("SERVER - ");
+      message.add(userName+" - ");
       message.add(m); 
 		try {
 			output.writeObject(message); //sends the message to the server
 			output.flush();
          if(visible) {
-			   showMessage("\nSERVER - " + m); //shows message in the users chat window
+			   showMessage("\n"+userName+" - " + m); //shows message in the users chat window
          }
 		}
 		catch(IOException e) {
-			chatWindow.append("\n something messed up sending message");
+			chatWindow.append("\nsomething messed up sending message");
 		}
 	}
    
@@ -312,10 +318,10 @@ public class Server extends JFrame {
 		try {
 			output.writeObject(encryptedMessage); //sends the message to the server
 			output.flush();
-			showMessage("\nSERVER - " + message); //shows message in the users chat window
+			showMessage("\n"+userName+" - " + message); //shows message in the users chat window
 		}
 		catch(IOException e) {
-			chatWindow.append("\n something messed up sending message");
+			chatWindow.append("\nsomething messed up sending message");
 		}
 	}
 
