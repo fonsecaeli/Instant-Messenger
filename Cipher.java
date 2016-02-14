@@ -1,4 +1,5 @@
 import java.math.*;
+import java.util.*;
 
 public class Cipher
 {
@@ -49,25 +50,25 @@ public class Cipher
       return decrypted;
    }
 
-   public String[] encryptString(String messageString)
+   public ArrayList<String> encryptString(String messageString)
    {
-      String[] cipherString = new String[messageString.length()];
+      ArrayList<String> cipherString = new ArrayList<String>(messageString.length());
       
       for (int ii = 0; ii < messageString.length(); ii++)
       {
-         cipherString[ii] = encryptChar(messageString.charAt(ii));
+         cipherString.add(ii, encryptChar(messageString.charAt(ii)));
       }
       
       return cipherString;
    }
    
-   public String decryptString(String[] cipherString)
+   public String decryptString(ArrayList<String> cipherString)
    {
       String decryptString = "";
       
-      for (int ii = 0; ii < cipherString.length; ii++)
+      for (int ii = 0; ii < cipherString.size(); ii++)
       {
-         decryptString += decryptChar(cipherString[ii]);
+         decryptString += decryptChar(cipherString.get(ii));
       }
       
       return decryptString;
