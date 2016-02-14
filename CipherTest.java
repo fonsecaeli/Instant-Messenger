@@ -4,8 +4,8 @@ public class CipherTest
 {
    public static void main(String[] arg)
    {
-      PublicKey encryptKey = new PublicKey("2753", "3233");
-      PublicKey decryptKey = new PublicKey();
+      Cipher encryptKey = new Cipher("2753", "3233");
+      Cipher decryptKey = new Cipher();
       
       String inString = "Eli Fonseca";
       BigInteger[] cipherString = new BigInteger[inString.length()];
