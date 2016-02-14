@@ -10,9 +10,11 @@ public class Cipher
    // Default values
    public Cipher()
    {
-      privateExponent = new BigInteger("17");
-      publicExponent = new BigInteger("2753");
-      modulus = new BigInteger("3233");
+      RSAKeyGenerator generator = new RSAKeyGenerator(512);
+      privateExponent = generator.getD();
+      publicExponent = generator.getE();
+      modulus = generator.getModulus();
+   
    }
    
    // Takes only the two public keys, used for encryption only
