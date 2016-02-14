@@ -25,7 +25,8 @@ public class Client extends JFrame {
    
    
    //fields for encryption
-   private boolean isEncrypted;
+   private boolean sendEncrypted;
+   private boolean receiveEncrypted;
    private Cipher encrypter;
    private Cipher decrypter;
    private String outKey1;//public exponent
@@ -36,7 +37,7 @@ public class Client extends JFrame {
    
    //sets up the public key encryption
    private void setupEncryption() {
-      decrypter = new Cipher();
+      decrypter = new Cipher(512);
       outKey1 = decrypter.getPublicExponent();
       outKey2 = decrypter.getModulus();
       
@@ -50,10 +51,10 @@ public class Client extends JFrame {
 			try {
 				ArrayList<String> message = (ArrayList<String>) input.readObject(); //all messages will be string[]
             if(ii == 0) {
-               inKey1 = message.get(0);
+               inKey1 = message.get(1);
             } 
             else {
-               inKey2 = message.get(0);
+               inKey2 = message.get(1);
             }
             
 			}
@@ -67,7 +68,8 @@ public class Client extends JFrame {
 	//constructor 
 	public Client(String host, int height, int length, int port) {
 		super("Instant Messenger-Client");
-      isEncrypted = true;
+      sendEncrypted = true;
+      receiveEncrypted = true;
       this.height = height;
       this.length = length;
       this.port = port;
@@ -80,8 +82,15 @@ public class Client extends JFrame {
 				public void actionPerformed(ActionEvent event) {
                String test = event.getActionCommand();
                if(!test.equals("")) {
-                  sendMessage(test);
-               }
+                  if (sendEncrypted)
+                  {
+                     sendMessage(test);
+                  }
+                  else
+                  {
+                     sendMessage(test, true);
+                  }
+               } 
 					userText.setText("");
 				}
 			}
@@ -133,7 +142,15 @@ public class Client extends JFrame {
       encrypt.addActionListener(
          new ActionListener() {
             public void actionPerformed(ActionEvent event) {
-               isEncrypted = false;
+               if (sendEncrypted)
+               {
+                  sendMessage("SET_ENCRYPTION");
+               }
+               else
+               {
+                  sendMessage("SET_ENCRYPTION", false);
+               }
+               sendEncrypted = !sendEncrypted;   // changes the encryption setting
             }
          }
       
@@ -198,19 +215,58 @@ public class Client extends JFrame {
 	private void whileChatting() throws IOException {
 		ableToType(true);
       String decryptedMessage = "";
-		do {
-			try {
-				ArrayList<String> message = (ArrayList<String>) input.readObject();
-            decryptedMessage = decrypter.decrypt(message);
-				showMessage("\n" + decryptedMessage);
-			}
-			catch(ClassNotFoundException e) {
-				showMessage("\n I don't know that object type!");
-			}
-		}
-		while(!decryptedMessage.equals("SERVER - END"));
-	}
+      String plainMessage = "";
+      do
+      {
+         System.out.println(receiveEncrypted);
+         if (receiveEncrypted == true)
+         {
+            do {
+            	//have conversation
+   
+               try {
+                  ArrayList<String> message = (ArrayList<String>) input.readObject();
+                  decryptedMessage = decrypter.decrypt(message);
+                  if (decryptedMessage.equals("SERVER - SET_ENCRYPTION"))
+                  {
+                     receiveEncrypted = !receiveEncrypted;
+                  
+                  }
 
+   
+      				showMessage("\n" + decryptedMessage);
+                  
+               }
+               catch(ClassNotFoundException e) {
+                  showMessage("\n idk wtf that user sent!");
+               }
+            }
+            while(!decryptedMessage.equals("SERVER - END") && !decryptedMessage.equals("SERVER - SET_ENCRYPTION")); //if the client wants end then use this string 
+         }
+         else
+         {
+            do
+            {
+         	   try {
+         			ArrayList<String> message = (ArrayList<String>) input.readObject(); // is ArrayList the message type?
+         		   plainMessage = message.get(0) + message.get(1);
+                  if (plainMessage.equals("SERVER - SET_ENCRYPTION"))
+                  {
+                     receiveEncrypted = !receiveEncrypted;
+                  }
+
+                  showMessage("\n" + plainMessage);
+                  
+         		}
+         		catch(ClassNotFoundException e) {
+         			showMessage("\n I don't know that object type!");
+         		}
+            }
+            while (!plainMessage.equals("SERVER - END") && !plainMessage.equals("SERVER - SET_ENCRYPTION"));
+         }
+      }
+      while (!plainMessage.equals("SERVER - END") && !decryptedMessage.equals("SERVER - END"));
+   }
 	//house keeping, closing all the streams and sockets down
 	private void closeStuff() {
 		showMessage("\nClosing stuff down");
@@ -227,7 +283,12 @@ public class Client extends JFrame {
 
 	//send messages to server 
 	private void sendMessage(String m, boolean visible) {
-      ArrayList<String> message = new ArrayList<String>(1); 
+      if (m.equals("SET_ENCRYPTED"))
+      {
+         sendEncrypted = !sendEncrypted;
+      }
+      ArrayList<String> message = new ArrayList<String>(2); 
+      message.add("CLIENT - ");
       message.add(m);
 		try {
 			output.writeObject(message); //sends the message to the server
@@ -243,6 +304,10 @@ public class Client extends JFrame {
    
    //sends messages sends them as ArrayList<string> as param instead of string 
    private void sendMessage(String message) {
+      if (message.equals("SET_ENCRYPTED"))
+      {
+         sendEncrypted = !sendEncrypted;
+      }
       ArrayList<String> encryptedMessage = encrypter.encryptString("CLIENT - ");
       encryptedMessage.addAll(encrypter.encryptString(message));
       System.out.println(encryptedMessage);
