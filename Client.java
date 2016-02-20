@@ -170,7 +170,7 @@ public class Client extends JFrame {
    //opens readme file
    private void openReadme() {
       try {
-         ProcessBuilder pb = new ProcessBuilder("Notepad.exe", "Readme.txt");
+         ProcessBuilder pb = new ProcessBuilder("Notepad.exe", "README.md");
          pb.start();
       }
       catch(IOException e) {
