@@ -6,7 +6,7 @@ public class ClientTest {
    private static String IP = "";
    private static int bitLength = 0;
 
-public static void main(String[] args) {
+public static void main(String[] args) throws InterruptedException {
       Login log = new Login(300, 300, true);
       getUserInfo(log);
 		Client client; 

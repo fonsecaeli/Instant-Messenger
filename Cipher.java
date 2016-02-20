@@ -8,9 +8,9 @@ public class Cipher
    private BigInteger modulus; // n
 
    // Default values
-   public Cipher()
+   public Cipher(int bitLength)
    {
-      RSAKeyGenerator generator = new RSAKeyGenerator(512);
+      RSAKeyGenerator generator = new RSAKeyGenerator(bitLength);
       privateExponent = generator.getD();
       publicExponent = generator.getE();
       modulus = generator.getModulus();

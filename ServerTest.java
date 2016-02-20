@@ -5,7 +5,7 @@ public class ServerTest {
    private static String userName = "";
    private static int bitLength = 0;
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws InterruptedException {
       Login log = new Login(300, 300, false);
       getUserInfo(log);
 		Server server = new Server(1000, 1000, 6789, userName, bitLength);
