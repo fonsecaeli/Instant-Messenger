@@ -23,14 +23,14 @@ import java.util.ArrayList;
 
 
 
-public class Server extends JFrame {
-
+public class Server extends Messenger {
+/*
    private JTextField userText;
    private JTextArea chatWindow;
    private ObjectOutputStream output;
    private ObjectInputStream input;
-   private ServerSocket server;
-   private Socket connection;
+*/   private ServerSocket server;
+/*   private Socket connection;
    private int height;
    private int length;
    private int port;
@@ -79,9 +79,11 @@ public class Server extends JFrame {
       encrypter = new Cipher(inKey1, inKey2);
 		
 	}
-   
+*/   
 	//constructor
    public Server(int height, int length, int port, String userName, int bitLength) {
+      super(height, length, port, userName, bitLength);
+      /*
       super("Instant Messenger-Server");
       this.userName = userName;
       this.bitLength = bitLength;
@@ -111,8 +113,9 @@ public class Server extends JFrame {
       setVisible(true);
       chatWindow.setFont(new Font("Serif", Font.PLAIN, 30));
       userText.setFont(new Font("Serif", Font.PLAIN, 30));
+      */
    }
-
+/*
 	//sets up the menus for the gui
    private void setupMenus() {
       JMenuBar menubar = new JMenuBar();
@@ -151,6 +154,7 @@ public class Server extends JFrame {
       encrypt.addActionListener(
          new ActionListener() {
             public void actionPerformed(ActionEvent event) {
+            isEncrypted = false;
             }
          }
       
@@ -172,26 +176,26 @@ public class Server extends JFrame {
          e.printStackTrace();
       }
    }
-
+*/
 
 	//set up and run the server 
    public void startRunning() {
       try {
-         server = new ServerSocket(port, 100); //port #, backlog(how many people can wait to access this instant messenger)
+         server = new ServerSocket(super.getPort(), 100); //port #, backlog(how many people can wait to access this instant messenger)
          while(true) {
             try {
             	//connect and have conversation
                waitForConnection();
-               setupStreams();
-               setupEncryption();
-               getPublicKeys();
-               whileChatting();
+               super.setupStreams();
+               super.setupEncryption();
+               super.getPublicKeys();
+               super.whileChatting();
             }
             catch(EOFException ex) {
-               showMessage("\n Server ended the connection!");
+               super.showMessage("\n Server ended the connection!");
             }
             finally {
-               closeStuff();
+               super.closeStuff();
             }
          }
       }
@@ -202,12 +206,12 @@ public class Server extends JFrame {
 
 	//wait for connection, then once connected give prompt to user
    private void waitForConnection() throws IOException {
-      showMessage(" Waiting for someone to connect... \n");
-      connection = server.accept(); //once someone asks to connect this accepts the connection to the socket, once connected a connection is created bewteen server and client 
-      showMessage(" Now connected to "+connection.getInetAddress().getHostName());
+      super.showMessage(" Waiting for someone to connect... \n");
+      super.setConnection(server.accept()); //once someone asks to connect this accepts the connection to the socket, once connected a connection is created bewteen server and client 
+      super.showMessage(" Now connected to "+super.getConnection().getInetAddress().getHostName());
    
    }
-
+/*
 	//get stream to send and receive data
    private void setupStreams() throws IOException {
       output = new ObjectOutputStream(connection.getOutputStream()); //creates pathway that allows to connect to another computer
@@ -238,12 +242,12 @@ public class Server extends JFrame {
 
 	//close streams and sockets after you are done chating 
    private void closeStuff() {
-      showMessage("\n Closing connections... \n");
-      ableToType(false);
+      super.showMessage("\n Closing connections... \n");
+      super.ableToType(false);
       try {
-         output.close();
-         input.close();
-         connection.close();
+         super.getOutput().close();
+         super.getInput().close();
+         super.getConnection().close();
       }
       catch(IOException e) {
          e.printStackTrace();
@@ -304,4 +308,5 @@ public class Server extends JFrame {
          }
          );
    } 
+*/
 }
