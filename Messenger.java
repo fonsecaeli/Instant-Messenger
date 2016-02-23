@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.EOFException;
 import java.net.Socket;
 import java.net.ServerSocket;
-import java.net.InetAddress;
 import java.awt.BorderLayout;
 import java.awt.Font;
 import java.awt.event.ActionListener;
@@ -20,12 +19,9 @@ import javax.swing.SwingUtilities;
 import java.math.BigInteger;
 import java.util.ArrayList;
 
+public class Messenger extends JFrame
+{
 
-
-
-
-public class Client extends Messenger {
-/*
 	private JTextField userText;
 	private JTextArea chatWindow;
 	private ObjectOutputStream output;
@@ -49,56 +45,92 @@ public class Client extends Messenger {
    private String userName;
    private String otherName;
    private int bitLength;
-*/
-	//constructor 
-	public Client(String host, int height, int length, int port, String userName, int bitLength) {
-		super(height, length, port, userName, bitLength);
-      super.setServerIP(host);
-      //isEncrypted = true;
-      /*
+   
+   //constructor**
+   public Messenger(int height, int length, int port, String userName, int bitLength) {
+      super("Instant Messenger");
       this.userName = userName;
       this.bitLength = bitLength;
+      isEncrypted = true;
       this.height = height;
       this.length = length;
-      
       this.port = port;
       setupMenus();
-		serverIP = host;
-		userText = new JTextField();
-		userText.setEditable(false);
-		userText.addActionListener(
-			new ActionListener() {
-				public void actionPerformed(ActionEvent event) {
+      userText = new JTextField();
+      userText.setEditable(false); //before you are connected you cannot type anything in message box 
+      userText.addActionListener(
+         new ActionListener() {
+            public void actionPerformed(ActionEvent event) {
                String test = event.getActionCommand();
                if(!test.equals("")) {
-                  sendMessage(test);
-               }
-					userText.setText("");
-				}
-			}
-		);
-		add(userText, BorderLayout.NORTH);
-		chatWindow = new JTextArea();
-		add(new JScrollPane(chatWindow), BorderLayout.CENTER);
-		setSize(height,length);
-		setVisible(true);
-		chatWindow.setFont(new Font("Serif", Font.PLAIN, 30));
-		userText.setFont(new Font("Serif", Font.PLAIN, 30));
-      */
-	}
-/*   
+                  sendEncrypted(test, true);
+               } 
+               userText.setText(""); //turns message box blank after message is sent
+            
+            }
+         }
+         );
+      add(userText, BorderLayout.NORTH);
+      chatWindow = new JTextArea();
+      add(new JScrollPane(chatWindow));
+      setSize(height, length); //size of window
+      setVisible(true);
+      chatWindow.setFont(new Font("Serif", Font.PLAIN, 30));
+      userText.setFont(new Font("Serif", Font.PLAIN, 30));
+   }
+
+   public void setServerIP(String host)
+   {
+      serverIP = host;
+   }
+
+   public String getServerIP()
+   {
+      return serverIP;
+   }
+
+   public int getPort()
+   {
+      return port;
+   }
+
+   public Socket getConnection()
+   {
+      return connection;
+   }
+
+   public void setConnection(Socket connection)
+   {
+      this.connection = connection;
+   }
+
+   public JTextField getUserText()
+   {
+      return userText;
+   }
+
+   public ObjectOutputStream getOutput()
+   {
+      return output;
+   }
+
+   public ObjectInputStream getInput()
+   {
+      return input;
+   }
+
    //sets up the public key encryption
-   private void setupEncryption() {
+   protected void setupEncryption() {
       decrypter = new Cipher(bitLength);
       outKey1 = decrypter.getPublicExponent();
       outKey2 = decrypter.getModulus();
       
-      sendMessage(outKey1, false);
-      sendMessage(outKey2, false);
-   }
+      sendUnencrypted(outKey1, false);
+      sendUnencrypted(outKey2, false);
+   }   
    
    //proccess the keys sent from the other user
-   private void getPublicKeys() throws IOException {
+   protected void getPublicKeys() throws IOException {
 		for(int ii = 0;  ii < 2;  ii++) { //two keys should be sent
 			try {
 				ArrayList<String> message = (ArrayList<String>) input.readObject(); //all messages will be string[]
@@ -117,9 +149,8 @@ public class Client extends Messenger {
       }
       encrypter = new Cipher(inKey1, inKey2);
 	}
-   
    //sets up the menus for the gui
-   private void setupMenus() {
+   protected void setupMenus() {
       JMenuBar menubar = new JMenuBar();
    	
    
@@ -163,13 +194,11 @@ public class Client extends Messenger {
          );
    
       setJMenuBar(menubar);
-   
-   	
-   	
    }	
-
+   
+   
    //opens readme file
-   private void openReadme() {
+   protected void openReadme() {
       try {
          ProcessBuilder pb = new ProcessBuilder("Notepad.exe", "Readme.txt");
          pb.start();
@@ -179,48 +208,16 @@ public class Client extends Messenger {
       }
    }
 
-*/
-	//connect to server 
-	public void startRunning() {
-      while (true) {
-   		try {
-   			connectToServer();
-   			super.setupStreams();
-            super.setupEncryption();
-            super.getPublicKeys();
-   			super.whileChatting();
-   		}
-   		catch(EOFException e) {
-   			super.showMessage("\nClient terminated connection");
-   
-   		}
-   		catch(IOException e2) {
-   			e2.printStackTrace();
-   		}
-   		finally {
-   			super.closeStuff();
-   		}
-      }
-	}
+	//get stream to send and receive data
+   protected void setupStreams() throws IOException {
+      output = new ObjectOutputStream(connection.getOutputStream()); //creates pathway that allows to connect to another computer
+      output.flush(); // clears the stream so there is no left over data
+      input = new ObjectInputStream(connection.getInputStream()); //sets pathway to receive messages 
+      showMessage("\nStreams are now setup! \n");
+   }
 
-	//connect to a server
-	private void connectToServer() throws IOException {
-		super.showMessage("Attempting connection... \n");
-		super.setConnection(new Socket(InetAddress.getByName(super.getServerIP()), super.getPort()));
-		super.showMessage("Connected to: " + super.getConnection().getInetAddress().getHostName());
-
-	}
-/*
-	//setting up streams for the client 
-	private void setupStreams() throws IOException {
-		output = new ObjectOutputStream(connection.getOutputStream());
-		output.flush();
-		input = new ObjectInputStream(connection.getInputStream());
-		showMessage("\nThe streams are set up and good to go! \n");
-	}
-
-	//while chatting with server 
-	private void whileChatting() throws IOException {
+	//while chatting with server** 
+	protected void whileChatting() throws IOException {
 		ableToType(true);
       String decryptedMessage = "";
 		do {
@@ -236,23 +233,25 @@ public class Client extends Messenger {
 		while(!decryptedMessage.equals(otherName+" - END"));
 	}
 
-	//house keeping, closing all the streams and sockets down
-	private void closeStuff() {
-		showMessage("\nClosing stuff down");
-		ableToType(false);
+	//send messages to server 
+	protected void sendEncrypted(String m, boolean visible) {
+      ArrayList<String> encryptedMessage = encrypter.encryptString(userName+" - ");
+      encryptedMessage.addAll(encrypter.encryptString(m));
+
 		try {
-			output.close();
-			input.close();
-			connection.close();
+			output.writeObject(encryptedMessage); //sends the message to the server
+			output.flush();
+         if(visible) {
+			   showMessage("\n"+userName+" - " + m); //shows message in the users chat window
+         }
 		}
 		catch(IOException e) {
-			e.printStackTrace();
+			chatWindow.append("\n something messed up sending message");
 		}
 	}
-
-	//send messages to server 
-	private void sendMessage(String m, boolean visible) {
-      ArrayList<String> message = new ArrayList<String>(2); 
+   
+   protected void sendUnencrypted(String m, boolean visible) {
+      ArrayList<String> message = new ArrayList<String>(2);
       message.add(userName+" - ");
       message.add(m);
 		try {
@@ -263,47 +262,46 @@ public class Client extends Messenger {
          }
 		}
 		catch(IOException e) {
-			chatWindow.append("\nsomething messed up sending message");
+			chatWindow.append("\n something messed up sending message");
 		}
-	}
+
    
-   //sends messages sends them as ArrayList<string> as param instead of string 
-   private void sendMessage(String message) {
-      ArrayList<String> encryptedMessage = encrypter.encryptString(userName+" - ");
-      encryptedMessage.addAll(encrypter.encryptString(message));
-      System.out.println(encryptedMessage);
-		try {
-			output.writeObject(encryptedMessage); //sends the message to the server
-			output.flush();
-			showMessage("\n"+userName+" - " + message); //shows message in the users chat window
-		}
-		catch(IOException e) {
-			chatWindow.append("\nSomething messed up sending message");
-		}
-	}
-
-
-	//updates chatWindow
-	private void showMessage(final String text) {
-		//setting aside a thread to update a gui, so we dont have to create an entire new gui when we just want to update part
-		SwingUtilities.invokeLater(
-			new Runnable() {
-				public void run() {
-					chatWindow.append(text); //adds message to the chatWindow
-				}
-			}
-		);
-	}
+   }
+   
+   //updates chatWindow
+   protected void showMessage(final String text) {
+   	//setting aside a thread to update a gui, so we dont have to create an entire new gui when we just want to update part
+      SwingUtilities.invokeLater(
+         new Runnable() {
+            public void run() {
+               chatWindow.append(text); //adds message to the chatWindow
+            }
+         }
+         );
+   }
 
 	//lets the user type stuff into there chat box
-	private void ableToType(final boolean trueOrFalse) {
-		SwingUtilities.invokeLater(
-			new Runnable() {
-				public void run() {
-					userText.setEditable(trueOrFalse);
-				}
-			}
-		);
-	} 
-*/ 
+   protected void ableToType(final boolean trueOrFalse) {
+      SwingUtilities.invokeLater(
+         new Runnable() {
+            public void run() {
+               userText.setEditable(trueOrFalse);
+            }
+         }
+         );
+   } 
+
+   //closes the window
+   protected void closeStuff() {
+      showMessage("\n Closing connections... \n");
+      ableToType(false);
+      try {
+         getOutput().close();
+         getInput().close();
+         getConnection().close();
+      }
+      catch(IOException e) {
+         e.printStackTrace();
+      }
+   }
 }
