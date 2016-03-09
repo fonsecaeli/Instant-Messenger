@@ -4,7 +4,7 @@ will also implement encryption algorthms to ensure secure communication line bet
 
 
 To Do List
-1. Server Login (name, ip, encryption bit length)
-2. Client Login ("")
-3. Input box?
-4. Colors
+1. Use existing Java libraries for encryption
+2. Less shitty graphics
+3. Work around firewalls?
+4. More buttons
